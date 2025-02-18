@@ -6,13 +6,11 @@ from flask import Flask, jsonify, request
 from openai import OpenAI
 
 # Make sure tools have been configure properly on the OpenAI Assistant
-from tools.functions.add_lead_to_spreadsheet import add_lead_to_spreadsheet
 from tools.functions.add_lead_to_google_sheet import add_lead_to_google_sheet
 
 app = Flask(__name__)
 
-# Initialize OpenAI client
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 
@@ -37,8 +35,7 @@ def chat():
     thread_id = data['thread_id']
 
     try:
-        # Create a new thread
-        if (thread_id == 'N/A'):
+        if (thread_id == 'N/A'):  # Create a new thread
             thread = client.beta.threads.create()
             thread_id = thread.id
         else:
@@ -77,11 +74,7 @@ def chat():
                     print(f"Parameters to use: {function_args}")
 
                     # Handle the function calls
-                    if function_name == "add_lead_to_spreadsheet":
-                        output = add_lead_to_spreadsheet(
-                            function_args["email"],
-                            function_args["phone_number"])
-                    elif function_name == "add_lead_to_google_sheet":
+                    if function_name == "add_lead_to_google_sheet":
                         output = add_lead_to_google_sheet(
                             function_args["email"],
                             function_args["phone_number"],
@@ -122,8 +115,6 @@ def chat():
                     break
 
             if response_message:
-                print(f"Assistant response: {response_message.content}\n")
-
                 if isinstance(response_message.content, list):
                     response_text = response_message.content[0].text.value
                 else:
