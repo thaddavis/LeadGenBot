@@ -5,21 +5,15 @@ import json
 from flask import Flask, jsonify, request
 from openai import OpenAI
 
+# Make sure tools have been configure properly on the OpenAI Assistant
 from tools.functions.add_lead_to_spreadsheet import add_lead_to_spreadsheet
+from tools.functions.add_lead_to_google_sheet import add_lead_to_google_sheet
 
 app = Flask(__name__)
 
 # Initialize OpenAI client
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_API_KEY)
-
-
-def call_function(name, arguments):
-    """Calls a function by name with given arguments."""
-    if name == "add_lead_to_spreadsheet":
-        return add_lead_to_spreadsheet(arguments["email"], arguments["phone"])
-    else:
-        return {"error": f"Function '{name}' not found."}
 
 
 @app.route('/', methods=['GET'])
@@ -31,16 +25,7 @@ def healthcheck():
 def chat():
     print('Entering chat.!.!.')
 
-    print(request)
-
-    print('HERE!!!')
-    print(request.json)
-
     data = request.json
-
-    print()
-    print(f"Received data: {data}")
-    print()
 
     if (not data) or ('assistant_id' not in data) or ('prompt' not in data):
         error_message = "Missing required parameters: assistant_id, prompt, & thread_id"
@@ -78,8 +63,6 @@ def chat():
 
             if run.status == "requires_action":  # Handle required actions
                 tools_to_call = run.required_action.submit_tool_outputs.tool_calls
-                print(len(tools_to_call))
-                print(tools_to_call)
 
                 tool_output_array = []
 
@@ -98,6 +81,11 @@ def chat():
                         output = add_lead_to_spreadsheet(
                             function_args["email"],
                             function_args["phone_number"])
+                    elif function_name == "add_lead_to_google_sheet":
+                        output = add_lead_to_google_sheet(
+                            function_args["email"],
+                            function_args["phone_number"],
+                            function_args["notes"])
                     else:
                         output = "Invalid function name"
 
